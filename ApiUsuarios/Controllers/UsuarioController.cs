@@ -17,12 +17,53 @@ namespace ApiUsuarios.Controllers
         }
 
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            var usuarios = await _context.Usuarios.ToListAsync();
-            return Ok(usuarios);
+            var usuario = await _context.Usuarios.FindAsync(id);
+            if (usuario == null)
+                return NotFound();
+            
+            return Ok(usuario);
         }
+
+        [HttpPut("{id}")]
+        public async Task<IActionResult> Put(int id, Usuario usuario)
+        {
+            if (id != usuario.Id)
+                return BadRequest();
+
+           var usuarioExistente = await _context.Usuarios.FindAsync(id);
+
+            if (usuarioExistente == null)
+                return NotFound();
+
+            usuarioExistente.Nome = usuario.Nome;
+
+            await _context.SaveChangesAsync();
+
+            return Ok(usuarioExistente);
+
+        //     try
+        //     {
+        //         await _context.SaveChangesAsync();
+        //     }
+        //     catch (DbUpdateConcurrencyException)
+        //     {
+        //         if (!UsuarioExists(id))
+        //             return NotFound();
+        //         else
+        //             throw;
+        //     }
+
+        //     return NoContent();
+        // }
+
+        
+        // // {
+        // //     var usuarios = await _context.Usuarios.ToListAsync();
+        // //     return Ok(usuarios);
+        // // }
 
         [HttpPost]
         public async Task<IActionResult> Post(Usuario usuario)
