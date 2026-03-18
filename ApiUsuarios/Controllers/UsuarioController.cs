@@ -48,8 +48,7 @@ namespace ApiUsuarios.Controllers
                 var response = new UsuarioResponseDto
                 {
                     Id = novo.Id,
-                    Nome = novo.Nome,
-                    DataCriacao = novo.DataCriacao
+                    Nome = novo.Nome
                 };
 
                 return Ok(response);
