@@ -1,43 +1,61 @@
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using ApiUsuarios.Data;
+using ApiUsuarios.Models;
+using ApiUsuarios.Repositories;
 
 namespace ApiUsuarios.Services
 {
-    public class UsuarioService
+    public class UsuarioService : IUsuarioService
     {
-        public UsuarioService()
+        private readonly IUsuarioRepository _repository;
+        public UsuarioService(IUsuarioRepository repository)
         {
+            _repository = repository;
         }
 
-        public async Task<List<Usuario>> ObterTodosUsuariosAsync()
+        public async Task<IEnumerable<Usuario>> GetAllAsync()
         {
-            // TODO: Implement logic to retrieve all users
-            throw new NotImplementedException();
+            return await _repository.GetAllAsync();
         }
 
-        public async Task<Usuario> ObterUsuarioPorIdAsync(int id)
+        public async Task<Usuario> GetByIdAsync(int id)
         {
-            // TODO: Implement logic to retrieve user by id
-            throw new NotImplementedException();
+            return await _repository.GetByIdAsync(id);
         }
 
-        public async Task<Usuario> CriarUsuarioAsync(Usuario usuario)
+        public async Task<Usuario> CreateAsync(Usuario usuario)
         {
-            // TODO: Implement logic to create a new user
-            throw new NotImplementedException();
+            await _repository.CreateAsync(usuario);
+            
+            return usuario;
         }
 
-        public async Task<Usuario> AtualizarUsuarioAsync(int id, Usuario usuario)
+        public async Task<Usuario> UpdateAsync(int id, Usuario usuario)
         {
-            // TODO: Implement logic to update a user
-            throw new NotImplementedException();
+            var usuarioExistente = await _repository.GetByIdAsync(id);
+            
+            if (usuarioExistente == null)                
+                return null;
+
+            usuarioExistente.Nome = usuario.Nome;
+            
+            await _repository.UpdateAsync(id, usuarioExistente);
+            
+            return usuarioExistente;
         }
 
-        public async Task<bool> DeletarUsuarioAsync(int id)
+        public async Task<bool> DeleteAsync(int id)
         {
-            // TODO: Implement logic to delete a user
-            throw new NotImplementedException();
+            var usuario = await _repository.GetByIdAsync(id);
+            
+            if (usuario == null)
+                return false;
+
+            await _repository.DeleteAsync(usuario);
+            
+            return true;
         }
     }
 }

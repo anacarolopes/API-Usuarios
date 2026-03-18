@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using ApiUsuarios.Data;
+using ApiUsuarios.Services;
 using ApiUsuarios.Models;
-using Microsoft.EntityFrameworkCore;
+using ApiUsuarios.DTOs;
 
 namespace ApiUsuarios.Controllers
 {
@@ -9,69 +9,74 @@ namespace ApiUsuarios.Controllers
     [Route("api/[controller]")]
     public class UsuarioController : ControllerBase
     {
-        private readonly AppDbContext _context;
+        private readonly IUsuarioService _service;
         
-        public UsuarioController(AppDbContext context)
+        public UsuarioController(IUsuarioService service)
         {
-            _context = context;
+            _service = service;
         }
 
+        [HttpGet]
+        public async Task<IActionResult> Get()
+        {
+            var usuarios = await _service.GetAllAsync();
 
+            return Ok(usuarios);    
+        }
+        
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(int id)
         {
-            var usuario = await _context.Usuarios.FindAsync(id);
+            var usuario = await _service.GetByIdAsync(id);
+            
             if (usuario == null)
                 return NotFound();
-            
+                
             return Ok(usuario);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Post(UsuarioCreateDto dto)
+        {
+                var usuario = new Usuario
+                {
+                    Nome = dto.Nome,
+                };
+                
+                var novo = await _service.CreateAsync(usuario);
+
+                var response = new UsuarioResponseDto
+                {
+                    Id = novo.Id,
+                    Nome = novo.Nome,
+                    DataCriacao = novo.DataCriacao
+                };
+
+                return Ok(response);
+           
         }
 
         [HttpPut("{id}")]
         public async Task<IActionResult> Put(int id, Usuario usuario)
         {
-            if (id != usuario.Id)
-                return BadRequest();
+           var atualizado = await _service.UpdateAsync(id, usuario);
 
-           var usuarioExistente = await _context.Usuarios.FindAsync(id);
-
-            if (usuarioExistente == null)
+            if (atualizado == null)
                 return NotFound();
 
-            usuarioExistente.Nome = usuario.Nome;
+            return Ok(atualizado);
+        }
 
-            await _context.SaveChangesAsync();
-
-            return Ok(usuarioExistente);
-
-        //     try
-        //     {
-        //         await _context.SaveChangesAsync();
-        //     }
-        //     catch (DbUpdateConcurrencyException)
-        //     {
-        //         if (!UsuarioExists(id))
-        //             return NotFound();
-        //         else
-        //             throw;
-        //     }
-
-        //     return NoContent();
-        // }
-
-        
-        // // {
-        // //     var usuarios = await _context.Usuarios.ToListAsync();
-        // //     return Ok(usuarios);
-        // // }
-
-        [HttpPost]
-        public async Task<IActionResult> Post(Usuario usuario)
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> Delete(int id)
         {
-            await _context.Usuarios.AddAsync(usuario);
-            await _context.SaveChangesAsync();
+                var removido = await _service.DeleteAsync(id);
 
-            return Ok(usuario);
+                if (!removido)
+                    return NotFound();
+
+                return NoContent();            
         }
     }
+
 }

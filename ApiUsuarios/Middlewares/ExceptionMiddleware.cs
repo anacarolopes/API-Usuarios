@@ -1,0 +1,55 @@
+using System;
+using System.Net;
+using System.Text.Json;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+
+namespace ApiUsuarios.Middlewares
+{
+    public class ExceptionMiddleware
+    {
+        private readonly RequestDelegate _next;
+        private readonly ILogger<ExceptionMiddleware> _logger;
+
+        public ExceptionMiddleware(RequestDelegate next, ILogger<ExceptionMiddleware> logger)
+        {
+            _next = next;
+            _logger = logger;
+        }
+
+        public async Task InvokeAsync(HttpContext context)
+        {
+            try
+            {
+                await _next(context);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro intrno no servidor");
+                
+                await HandleExceptionAsync(context, ex);
+            }
+        }
+
+        private static Task HandleExceptionAsync(HttpContext context, Exception ex)
+        {
+            context.Response.ContentType = "application/json";
+            
+            context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+
+            var response = new
+            {
+                message = "Ocorreu um erro ao processar sua solicitação",
+                statusCode = context.Response.StatusCode,
+                timestamp = DateTime.UtcNow
+            };
+
+            var json = JsonSerializer.Serialize(response);
+
+            context.Response.ContentType = "application/json";
+
+            return context.Response.WriteAsJsonAsync(json);
+        }
+    }
+}
