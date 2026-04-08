@@ -26,7 +26,7 @@ namespace ApiUsuarios.Middlewares
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Erro intrno no servidor");
+                _logger.LogError(ex, "Erro interno no servidor");
                 
                 await HandleExceptionAsync(context, ex);
             }
